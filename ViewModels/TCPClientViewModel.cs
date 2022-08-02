@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using _7._12_debug_assistant.Service;
+using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,6 +23,7 @@ namespace _7._12_debug_assistant.ViewModels
             get { return ipAddress; }
             set { SetProperty(ref ipAddress, value); }
         }
+        public Action<string> onstringrecieved;
 
         private bool iPEnable=true ;
 
@@ -107,7 +110,7 @@ namespace _7._12_debug_assistant.ViewModels
 
         public bool HexST
         {
-            get { return HexRT; }
+            get { return hexST; }
             set { SetProperty(ref hexST, value); }
         }
         Dictionary<string ,Socket> dicSocket= new Dictionary<string, Socket>();
@@ -117,15 +120,25 @@ namespace _7._12_debug_assistant.ViewModels
         bool bClientConnetFlag = true ;
         Socket Clientsocket=null;
         Thread threadClintReceive=null;
+        StringEdge[] stringEdge = new StringEdge[1] { new StringEdge() };
         public TCP_ClientViewModel()
         {
             IpAddress=GetIP();
+            stringEdge[0].CurrentValue = Content;
         }
 
         private void ClientConnect()
         {
             try 
             {
+                if(stringEdge[0].CurrentValue== "⊙  断 开" && stringEdge[0].ValueChanged)
+                {
+                    bClientConnetFlag=false;
+                }
+                else
+                {
+                    bClientConnetFlag=true; 
+                }
                 if (bClientConnetFlag)
                 {
                     Clientsocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -135,11 +148,12 @@ namespace _7._12_debug_assistant.ViewModels
                     IPEndPoint ipPoint = new IPEndPoint(ip, Convert.ToInt32(this.Port.Trim()));
                     Clientsocket.Connect(ip, Convert.ToInt32(this.Port.Trim()));
                     ReciveData = "连接成功!";
-                    bClientConnetFlag=false;
+                    //bClientConnetFlag=false;
                     IPEnable = false;
                     PortEnable = false;
                     Connect = "Red";
                     Content = "⊙  断 开";
+                    stringEdge[0].CurrentValue = Content;
                     Thread threadClintReceive = new Thread(new ParameterizedThreadStart(Receive));
                     //开启一个新的线程不停的接收服务器发送消息的线程
                     //threadClintReceive = new Thread(new ThreadStart(clientReceive));
@@ -167,8 +181,10 @@ namespace _7._12_debug_assistant.ViewModels
                         IPEnable = true;
                         PortEnable = true;
                         Connect = "Black";
+                        Content= "⊙  连 接";
+                        stringEdge[0].CurrentValue = Content;
                         ReciveData = "连接已经断开!";
-                        bClientConnetFlag = true ;
+                        bClientConnetFlag = false  ;
 
                     }
                     catch (Exception ex)
@@ -204,28 +220,32 @@ namespace _7._12_debug_assistant.ViewModels
                 if (count == 0)//count 表示客户端关闭，要退出循环
                 {
                     //提示客户端离线"[" + socketSend.RemoteEndPoint + "]  " + 
-                    string strReceiveMsg = "下线通知：" + "[" + Clientsocket.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f");
-                    dicSocket.Remove(Clientsocket.RemoteEndPoint.ToString());
+                    string strReceiveMsg = "下线通知：" + "[" + ReciveData+ "]  " + System.DateTime.Now.ToString("f");
+                    ReciveData=strReceiveMsg;
+                   
+
+                    //dicSocket.Remove(Clientsocket.RemoteEndPoint.ToString());
                     break;
                 }
                 else
                 {
                     string str = Encoding.Default.GetString(buffer, 0, count);
-                    if (HexRT == false)//16进制显示
+                    if (HexRT == true)//16进制显示
                     {
                         string strHex = "[" + Clientsocket.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f") + "\r\n";
                         for (int i = 0; i < count; i++)
                         {
                             strHex += buffer[i].ToString("X2") + " ";
                         }
-                        ReciveData = strHex;
+                        ReciveData += strHex;
 
                     }
                     else
                     {//字符串显示
-                        string strReceiveMsg = "[" + Clientsocket.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f")+str;
+                        string strReceiveMsg = "[" + Clientsocket.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f")+ "\r\n"+str;
                        // strReceiveMsg = str;
-                        ReciveData = strReceiveMsg;
+                        ReciveData += strReceiveMsg;
+                        onstringrecieved?.Invoke(strReceiveMsg);
                     }
                 }
             }
@@ -246,9 +266,16 @@ namespace _7._12_debug_assistant.ViewModels
 
         private void ServerSendData()
         {
-            if (HexST == false)
+            if (HexST == true)
             {
                 string strSend = SendData;//获取发送框的数据
+                string strSend1 = strSend.Replace(" ", "");
+                bool isHexa = Regex.IsMatch(strSend1, @"[A-Fa-f0-9]+$");// @"[A-Fa-f0-9]+$","^[0-9A-Fa-f]+$"
+                if (isHexa == false)
+                {
+                    strSend = FormatConert.StringToHexString(strSend, Encoding.UTF8);
+                    SendData = strSend;
+                }
                 string strSendWithoutNull = strSend.Trim();//回删除了string字符串首部和尾部空格的字符串
                 string strSendWithoutComma = strSendWithoutNull.Replace(',', ' ');//去掉英文逗号
                 string strSendWithoutComma1 = strSendWithoutComma.Replace("0x", " ");//去掉0x
@@ -259,9 +286,9 @@ namespace _7._12_debug_assistant.ViewModels
                 try
                 {
                     byte[] buff = new byte[iStrLength];
+                    int count = 0;
                     foreach (string item in strArray)
                     {
-                        int count = 0;
                         //新建字符数组
                         buff[count] = byte.Parse(item, System.Globalization.NumberStyles.HexNumber);//格式化字符串为十六进制数值
                         count++;

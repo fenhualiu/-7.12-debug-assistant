@@ -83,6 +83,7 @@
     <Compile Include="INotifyPropertyChang.cs" />
     <Compile Include="Model\Class1.cs" />
     <Compile Include="Model\MenuBar.cs" />
+    <Compile Include="Service\Edge.cs" />
     <Compile Include="Service\FormatConert.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\TCPClientViewModel.cs" />

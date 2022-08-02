@@ -23,6 +23,7 @@ namespace _7._12_debug_assistant.ViewModel
         public MainWindowViewModel(IRegionManager regionManaer)
         {
             //OpenCommand = new DelegateCommand<string>(Open);
+            this.regionManaer=regionManaer;
 
         }
 

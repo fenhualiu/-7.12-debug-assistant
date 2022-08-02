@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using _7._12_debug_assistant.Service;
+using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -114,11 +116,11 @@ namespace _7._12_debug_assistant.ViewModels
             get { return hexRT; }
             set { SetProperty(ref hexRT, value); }
         }
-        private bool hexST;
+        private bool hexST = false;
 
         public bool HexST
         {
-            get { return HexRT; }
+            get { return hexST; }
             set { SetProperty(ref hexST, value); }
         }
         private string selectedItem;
@@ -134,8 +136,11 @@ namespace _7._12_debug_assistant.ViewModels
         Thread AcceptSocketThread;
         //接收客户端发送消息的线程
         Thread threadReceive;
+        StringEdge[] Edge = new StringEdge[1] { new StringEdge() };
         public Net_portViewModel()
         {
+            ClientList = new ObservableCollection<string>();
+            Edge[0].CurrentValue = Content;
             IpAddress = GetIP();
 
         }
@@ -170,6 +175,14 @@ namespace _7._12_debug_assistant.ViewModels
         {
             try
             { 
+                if(Edge[0].CurrentValue== "⊙  关 闭" && Edge[0].ValueChanged)
+                {
+                    bListenFlag = false;
+                }
+                else
+                {
+                    bListenFlag = true;
+                }
                 if (bListenFlag)
                 {
                     Listensocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -183,9 +196,9 @@ namespace _7._12_debug_assistant.ViewModels
                     Open = "Red";
                     Content = "⊙  关 闭";
                     //Serversocket.RemoteEndPoint.ToString();
+                    Edge[0].CurrentValue = Content;
                     Listensocket.Listen(10);
-                    bListenFlag = false ;
-
+                   // bListenFlag = false ;
                     this.IPEnable = false;
                     this.PortEnable = false;
                     AcceptSocketThread = new Thread(new ParameterizedThreadStart(StartListen));
@@ -216,12 +229,12 @@ namespace _7._12_debug_assistant.ViewModels
                         threadReceive.Abort();
                         threadReceive = null;
                     }
-
-
                     this.IPEnable = true;
                     this.PortEnable = true;
                     Open = "Black";
-                    ReciveData=("停止监听成功\r \n");
+                    Content = "⊙  打 开";
+                    Edge[0].CurrentValue=Content;
+                    ReciveData =("停止监听成功\r \n");
                     bListenFlag = false;
                 }
 
@@ -232,6 +245,19 @@ namespace _7._12_debug_assistant.ViewModels
                 Open = "Green";
             }
             
+        }
+        protected virtual void Invoke(Action action) => OnUIThread(action);
+
+        private void OnUIThread(Action action)
+        {
+            try
+            {
+                Application.Current?.Dispatcher.BeginInvoke(action);
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         /// 等待客户端的连接，并且创建与之通信用的Socket
@@ -244,10 +270,14 @@ namespace _7._12_debug_assistant.ViewModels
                 //{
                 //等待客户端的连接，并且创建一个用于通信的Socket
                 Serversocket = socketWatch.Accept();
-                //获取远程主机的ip地址和端口号
+                //获取远程主机的ip地址和端口号,RemoteEndPoint,LocalEndPoint
                 string strIp = Serversocket.RemoteEndPoint.ToString();
                 dicSocket.Add(strIp, Serversocket);
-                ClientList.Add(strIp);
+                Invoke(() =>
+                {
+                    ClientList.Add(strIp);
+                });
+               
                 //this.cmb_Socket.Invoke(setCmbCallBack, strIp);
 
                 string strMsg = "上线通知：" + "[" + Serversocket.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f");
@@ -296,9 +326,13 @@ namespace _7._12_debug_assistant.ViewModels
                 {
                     //提示客户端离线"[" + socketSend.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f") + "\r\n";
                     string strReceiveMsg = "下线通知：" + "[" + socketSend.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f");
-                    //ReciveData.Invoke(receiveCallBack, strReceiveMsg);
+                   // ReciveData.Invoke(receiveCallBack, strReceiveMsg);
+                    ReciveData= strReceiveMsg;
                     dicSocket.Remove(socketSend.RemoteEndPoint.ToString());
-                    ClientList.Remove(socketSend.RemoteEndPoint.ToString());
+                    Invoke(() =>
+                    {
+                        ClientList.Remove(socketSend.RemoteEndPoint.ToString());
+                    });
                     //cmb_Socket.Items.Remove(socketSend.RemoteEndPoint.ToString());
                    // this.cmb_Socket.Invoke(removeCmbCallBack, socketSend.RemoteEndPoint.ToString());
                     break; 
@@ -306,7 +340,7 @@ namespace _7._12_debug_assistant.ViewModels
                 else
                 {
                     string str = Encoding.Default.GetString(buffer, 0, count);
-                    if (HexRT==false)//16进制显示
+                    if (HexRT==true)//16进制显示
                     {
                         string strHex = "[" + socketSend.RemoteEndPoint + "]  " + System.DateTime.Now.ToString("f") + "\r\n";
                         for (int i = 0; i < count; i++)
@@ -328,9 +362,16 @@ namespace _7._12_debug_assistant.ViewModels
 
         private void ServerSendData()
         {
-            if (HexST==false)
+            if (HexST==true)
             {
                 string strSend = SendData;//获取发送框的数据
+                string strSend1 = strSend.Replace(" ", "");
+                bool isHexa = Regex.IsMatch(strSend1, @"[A-Fa-f0-9]+$");// @"[A-Fa-f0-9]+$","^[0-9A-Fa-f]+$"
+                if (isHexa == false) 
+                {
+                    strSend=FormatConert.StringToHexString(strSend, Encoding.UTF8);
+                    SendData=strSend;
+                }
                 string strSendWithoutNull = strSend.Trim();//回删除了string字符串首部和尾部空格的字符串
                 string strSendWithoutComma = strSendWithoutNull.Replace(',', ' ');//去掉英文逗号
                 string strSendWithoutComma1 = strSendWithoutComma.Replace("0x", " ");//去掉0x
@@ -341,12 +382,14 @@ namespace _7._12_debug_assistant.ViewModels
                 try
                 {
                     byte[] buff = new byte[iStrLength];
+                    int count = 0;
                     foreach (string item in strArray)
                     {
-                        int count =0;
-                          //新建字符数组
-                        buff[count] = byte.Parse(item, System.Globalization.NumberStyles.HexNumber);//格式化字符串为十六进制数值
-                        count++;                                                                            
+                        //新建字符数组
+                        buff[count] = Convert.ToByte(item, 16);
+                            //byte.Parse(item, System.Globalization.NumberStyles.HexNumber);//格式化字符串为十六进制数值
+                        count++;
+
                     }
                     if (SelectedItem == null)
                     {
@@ -355,7 +398,6 @@ namespace _7._12_debug_assistant.ViewModels
                     }
                     string ip = SelectedItem;
                     dicSocket[ip].Send(buff);
-
                 }
                 catch
                 {

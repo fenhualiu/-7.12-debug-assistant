@@ -120,14 +120,14 @@
                                 Padding="1"
                                 Background="#757575"
                                 Command="{Binding OpenCommand}"
-                                CommandParameter="TCP-Server"
-                                Content="TCP-Server" /> 
+                                CommandParameter="Netport"
+                                Content="TCP-Server" />
                             <Button
                                 Margin="5"
                                 Padding="1"
                                 Background="#757575"
                                 Command="{Binding OpenCommand}"
-                                CommandParameter="TCP-Client"
+                                CommandParameter="TCPClient"
                                 Content="TCP-Client" />
                             <ToggleButton
                                 x:Name="MenuToggleButton"
@@ -147,7 +147,7 @@
                         Grid.Column="1"
                         BorderBrush="Gray"
                         BorderThickness="3">
-                        <ContentControl x:Name="llll" Content="{Binding Body}">
+                        <ContentControl x:Name="llll" prism:RegionManager.RegionName="ContentRegion">
                             <!--  使用内容呈现器来显示用户控件界面 Content="{Binding Body}" prism:RegionManager.RegionName="ContentRegion"  -->
                         </ContentControl>
                     </Border>
