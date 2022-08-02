@@ -1,4 +1,5 @@
-﻿using System;
+﻿using _7._12_debug_assistant.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,13 +17,16 @@ using System.Windows.Shapes;
 namespace _7._12_debug_assistant.Views
 {
     /// <summary>
-    /// UserControl2.xaml 的交互逻辑
+    /// UserControl3.xaml 的交互逻辑
     /// </summary>
-    public partial class Netport : UserControl
+    public partial class TCPClient : UserControl
     {
-        public Netport()
+       public TCP_ClientViewModel tCP_ClientViewModel;
+        public TCPClient()
         {
             InitializeComponent();
+            tCP_ClientViewModel=new TCP_ClientViewModel();
+            DataContext = tCP_ClientViewModel;
         }
     }
 }

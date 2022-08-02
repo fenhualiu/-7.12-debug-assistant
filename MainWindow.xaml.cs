@@ -22,12 +22,12 @@ namespace _7._12_debug_assistant
     /// </summary>
     public partial class MainWindow : Window
     {
-      public   MainViewModel mainViewModel;
+      public MainWindowViewModel mainViewModel;
         //public IRegionManager regionManager;
         public MainWindow(IRegionManager regionManager)
         {
             InitializeComponent();
-            mainViewModel=new MainViewModel(regionManager);
+            mainViewModel=new MainWindowViewModel(regionManager);
             this.DataContext=mainViewModel;
             BtnMin.Click += (s, e) =>
             {

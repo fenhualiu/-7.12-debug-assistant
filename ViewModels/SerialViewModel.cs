@@ -111,7 +111,21 @@ namespace _7._12_debug_assistant.ViewModels
 
         public bool iIsOpenFlag = true;
 
-        private ObservableCollection<string> data = new ObservableCollection<string>() { "9600", "12800", "38400", "115200" };
+        private ObservableCollection<string> baudData = new ObservableCollection<string>() { "9600", "12800", "38400", "115200" };
+        public ObservableCollection<string> BaudData
+        {
+            get { return baudData; }
+            set { baudData = value; }
+        }
+        private ObservableCollection<string> crcData = new ObservableCollection<string>() { "NONE", "ODD", "EVEN", "MARK","SPACE" };
+
+        public ObservableCollection<string> CRCData
+        {
+            get { return crcData; }
+            set { crcData = value; }
+        }
+        private ObservableCollection<string> data = new ObservableCollection<string>() 
+        { "5", "6", "7","8"};
 
         public ObservableCollection<string> Data
         {
@@ -119,12 +133,19 @@ namespace _7._12_debug_assistant.ViewModels
             set { data = value; }
         }
 
+        private ObservableCollection<string> stopData = new ObservableCollection<string>() 
+        { "1", "1.5", "2" };
+
+        public ObservableCollection<string> StopData
+        {
+            get { return stopData ; }
+            set { stopData = value; }
+        }
+
         public SerialViewModel()
         {
             //OpenCommand = new DelegateCommand<string>();
-            serialPort1.Close();
-            string[] ports = SerialPort.GetPortNames();//获取已有的串口数目
-            Array.Sort(ports);//自动排列顺序
+           
 
         }
 
@@ -172,7 +193,7 @@ namespace _7._12_debug_assistant.ViewModels
                 {
                     iIsOpenFlag = false;
                     //ComboBox.IsEnabled = false;//失能
-                    //                           //   BaudcomboBox.IsEnabled = false;
+                    ////   BaudcomboBox.IsEnabled = false;
                     //StopcomboBox.IsEnabled = false;
                     //DatacomboBox.IsEnabled = false;
                     //CRCcomboBox.IsEnabled = false;

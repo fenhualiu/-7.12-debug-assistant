@@ -1,4 +1,5 @@
-﻿using System;
+﻿using _7._12_debug_assistant.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,13 +17,16 @@ using System.Windows.Shapes;
 namespace _7._12_debug_assistant.Views
 {
     /// <summary>
-    /// UserControl3.xaml 的交互逻辑
+    /// UserControl2.xaml 的交互逻辑
     /// </summary>
-    public partial class UserControl3 : UserControl
+    public partial class Netport : UserControl
     {
-        public UserControl3()
+        public Net_portViewModel net_PortViewModel;
+        public Netport()
         {
             InitializeComponent();
+            net_PortViewModel=new Net_portViewModel();
+            DataContext = net_PortViewModel;
         }
     }
 }

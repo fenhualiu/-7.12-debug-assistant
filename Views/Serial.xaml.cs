@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -31,7 +32,11 @@ namespace _7._12_debug_assistant.Views
             InitializeComponent();
             serialViewModel=new SerialViewModel();
             this .DataContext = serialViewModel;
-
+            serialPort1.Close();
+            string[] ports = SerialPort.GetPortNames();//获取已有的串口数目
+            Array.Sort(ports);//自动排列顺序
+            ComboBox.Items.Add(ports);//添加串口
+            ComboBox.SelectedIndex = ComboBox.Items.Count > 0 ? 0 : -1;//判断串口数是否大于0
 
         }
 
@@ -45,124 +50,131 @@ namespace _7._12_debug_assistant.Views
         {
             SendTextBox.Text = "";
         }
-        ///// <summary>
-        ///// 打开串口
-        ///// </summary>
-        ///// <param name="sender"></param>
-        ///// <param name="e"></param>
-        //private void Button_Click_2(object sender, RoutedEventArgs e)
-        //{
-        //    if (iIsOpenFlag)
-        //    {
-        //        if (serialPort1.IsOpen)//如果串口1是打开的状态，关闭串口1
-        //        {
-        //            serialPort1.Close();
-        //        }
-        //        serialPort1.BaudRate = Convert.ToInt32(BaudcomboBox.Text);//字符串转化为16进制 串口波特率
-        //        serialPort1.PortName = ComboBox.Text;//串口号
-        //        serialPort1.DataBits = Convert.ToInt32(DatacomboBox.Text);//串口数据位
-        //        switch (CRCcomboBox.SelectedIndex)
-        //        {                  //串口奇偶校验位
-        //            case 0:
-        //                serialPort1.Parity = Parity.None;
-        //                break;
-        //            case 1:
-        //                serialPort1.Parity = Parity.Even;
-        //                break;
-        //            case 2:
-        //                serialPort1.Parity = Parity.Odd;
-        //                break;
-        //            default:
-        //                serialPort1.Parity = Parity.None;
-        //                break;
-        //        }
-        //        switch (StopcomboBox.SelectedIndex)
-        //        {                  //串口奇偶校验位
-        //            case 1:
-        //                serialPort1.StopBits = StopBits.One;
-        //                break;
-        //            case 0:
-        //                serialPort1.StopBits = StopBits.Two;
-        //                break;
+        /// <summary>
+        /// 打开串口
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            if (iIsOpenFlag)
+            {
+                try
+                {
+                    if (serialPort1.IsOpen)//如果串口1是打开的状态，关闭串口1
+                    {
+                        serialPort1.Close();
+                    }
+                    serialPort1.BaudRate = Convert.ToInt32(BaudcomboBox.Text);//字符串转化为16进制 串口波特率
+                    serialPort1.PortName = ComboBox.Text;//串口号
+                    serialPort1.DataBits = Convert.ToInt32(DatacomboBox.Text);//串口数据位
+                    switch (CRCcomboBox.SelectedIndex)
+                    {                  //串口奇偶校验位
+                        case 0:
+                            serialPort1.Parity = Parity.None;
+                            break;
+                        case 1:
+                            serialPort1.Parity = Parity.Even;
+                            break;
+                        case 2:
+                            serialPort1.Parity = Parity.Odd;
+                            break;
+                        default:
+                            serialPort1.Parity = Parity.Mark;
+                            break;
+                    }
+                    switch (StopcomboBox.SelectedIndex)
+                    {                  //串口奇偶校验位
+                        case 1:
+                            serialPort1.StopBits = StopBits.One;
+                            break;
+                        case 0:
+                            serialPort1.StopBits = StopBits.Two;
+                            break;
 
-        //            default:
-        //                serialPort1.StopBits = StopBits.One;
-        //                break;
-        //        }
-        //        serialPort1.Open();
-        //        if (serialPort1.IsOpen)
-        //        {
-        //            iIsOpenFlag = false;
-        //            ComboBox.IsEnabled = false;//失能
-        //            BaudcomboBox.IsEnabled = false;
-        //            StopcomboBox.IsEnabled = false;
-        //            DatacomboBox.IsEnabled = false;
-        //            CRCcomboBox.IsEnabled = false;
-        //            Openserial.Background= Brushes.Red;
-        //            Openserial.Content = "关闭串口";
-        //        }
-        //        serialPort1.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);//添加数据接收事件
-        //    }
-        //    else
-        //    {
-        //        serialPort1.Close();
-        //        if (serialPort1.IsOpen == false)
-        //        {
-        //            iIsOpenFlag = true;
-        //            ComboBox.IsEnabled = true;//失能
-        //            BaudcomboBox.IsEnabled = true;
-        //            StopcomboBox.IsEnabled = true;
-        //            DatacomboBox.IsEnabled = true;
-        //            CRCcomboBox.IsEnabled = true;
-        //            Openserial.Content = "打开串口";
-        //        }
-        //    }
-        //}
+                        default:
+                            serialPort1.StopBits = StopBits.One;
+                            break;
+                    }
+                    serialPort1.Open();
+                    if (serialPort1.IsOpen)
+                    {
+                        iIsOpenFlag = false;
+                        ComboBox.IsEnabled = false;//失能
+                        BaudcomboBox.IsEnabled = false;
+                        StopcomboBox.IsEnabled = false;
+                        DatacomboBox.IsEnabled = false;
+                        CRCcomboBox.IsEnabled = false;
+                        Openserial.Background = Brushes.Red;
+                        Openserial.Content = "关闭串口";
+                    }
+                    serialPort1.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);//添加数据接收事件
+                }
+                catch
+                {
+                    MessageBox.Show("请打开串口！");
+                }              
+            }
+            else
+            {
+                serialPort1.Close();
+                if (serialPort1.IsOpen == false)
+                {
+                    iIsOpenFlag = true;
+                    ComboBox.IsEnabled = true;//失能
+                    BaudcomboBox.IsEnabled = true;
+                    StopcomboBox.IsEnabled = true;
+                    DatacomboBox.IsEnabled = true;
+                    CRCcomboBox.IsEnabled = true;
+                    Openserial.Content = "打开串口";
+                }
+            }
+        }
 
-        //Dispatcher Dispatcher;
-        //private StringBuilder builder = new StringBuilder();//避免在事件处理方法中反复的创建，定义到外面。
-        //private long received_count = 0;//接收计数
-        ///// <summary>
-        ///// Data Recive
-        ///// </summary>
-        ///// <param name="sender"></param>
-        ///// <param name="e"></param>
-        //public void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)//读取下位机的数据，显示在textBlock中
-        //{
-        //    int len = this.serialPort1.BytesToRead;
-        //    byte[] buffer = new byte[len];
-        //    this.serialPort1.Read(buffer, 0, len);
-        //    builder.Remove(0, builder.Length);//清除字符串构造器的内容
-        //   // string strData = BitConverter.ToString(buffer, 0, len);
-        //    //Dispatcher.Invoke(() =>
-        //    //{
-        //    //    this.ReciveTextBox.Text += strData;
-        //    //    this.ReciveTextBox.Text += " ";//字符分隔-
-        //    //});
-        //    Dispatcher.Invoke((EventHandler)(delegate  //因为要访问ui资源，所以需要使用invoke方式同步ui。
-        //    {
-        //        if ((bool)(checkHexRX.IsChecked))//16进制显示
-        //        {
-        //            //依次的拼接出16进制字符串
-        //            foreach (byte b in buffer)
-        //            {
-        //                SendTextBox.AppendText(b.ToString("X2") + " ");
-        //            }
+        Dispatcher Dispatcher;
+        private StringBuilder builder = new StringBuilder();//避免在事件处理方法中反复的创建，定义到外面。
+        private long received_count = 0;//接收计数
+        /// <summary>
+        /// Data Recive
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)//读取下位机的数据，显示在textBlock中
+        {
+            int len = this.serialPort1.BytesToRead;
+            byte[] buffer = new byte[len];
+            this.serialPort1.Read(buffer, 0, len);
+            builder.Remove(0, builder.Length);//清除字符串构造器的内容
+           // string strData = BitConverter.ToString(buffer, 0, len);
+            //Dispatcher.Invoke(() =>
+            //{
+            //    this.ReciveTextBox.Text += strData;
+            //    this.ReciveTextBox.Text += " ";//字符分隔-
+            //});
+            Dispatcher.Invoke((EventHandler)(delegate  //因为要访问ui资源，所以需要使用invoke方式同步ui。
+            {
+                if ((bool)(checkHexRX.IsChecked))//16进制显示
+                {
+                    //依次的拼接出16进制字符串
+                    foreach (byte b in buffer)
+                    {
+                        SendTextBox.AppendText(b.ToString("X2") + " ");
+                    }
 
-        //        }
-        //        else
-        //        {
-        //            //直接按ASCII规则转换成字符串
-        //            builder.Append(Encoding.ASCII.GetString(buffer));
-        //        }
-        //        //追加的形式添加到文本框末端，并滚动到最后。
-        //        this.ReciveTextBox.AppendText(builder.ToString());
+                }
+                else
+                {
+                    //直接按ASCII规则转换成字符串
+                    builder.Append(Encoding.ASCII.GetString(buffer));
+                }
+                //追加的形式添加到文本框末端，并滚动到最后。
+                this.ReciveTextBox.AppendText(builder.ToString());
 
-        //        //修改接收计数
-        //        //labelGetCount.Text = "Get:" + received_count.ToString();
-        //    }));
+                //修改接收计数
+                //labelGetCount.Text = "Get:" + received_count.ToString();
+            }));
 
-        //}
+        }
 
         private void HandTX_Click(object sender, RoutedEventArgs e)
         {
@@ -219,6 +231,43 @@ namespace _7._12_debug_assistant.Views
                 }
 
             }
+        }
+        public Timer timer = new Timer();
+       // public bool IsStart=false;
+        private void AutoSend_Click(object sender, RoutedEventArgs e)
+        {            
+            if(timer.Enabled == false)
+            {
+                try
+                {
+                    timer.Enabled = true;//打开定时器
+                    timer.Interval = double.Parse(Intervals.Text);
+                    timer.Elapsed += Timer_Elapsed;
+                    AutoSend.Content = "停止发送";
+                }
+                catch
+                {
+                    MessageBox.Show("请检查时间输入格式");
+                }               
+            }
+            else
+            {
+                try
+                {
+                    timer.Enabled = false;
+                    AutoSend.Content = "自动发送";
+                }
+                catch
+                {
+                    MessageBox.Show("关闭计时器失败！");
+                }
+            }
+           
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            serialPort1.WriteLine(SendTextBox.Text);
         }
     }
 }

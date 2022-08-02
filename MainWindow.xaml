@@ -4,15 +4,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:local="clr-namespace:_7._12_debug_assistant"
+    xmlns:local="clr-namespace:_7._12_debug_assistant.ViewModel"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:prism="http://prismlibrary.com/"
     Title="MainWindow"
-    Width="900"
-    Height="800"
+    Width="1000"
+    Height="700"
     AllowsTransparency="True"
+    Background="#004D40"
     WindowStartupLocation=" CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
@@ -43,7 +44,8 @@
                     </StackPanel>
                 </DockPanel>
             </materialDesign:DrawerHost.LeftDrawerContent>
-            <Grid Background="AliceBlue">
+
+            <Grid Background="#757575">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
                     <RowDefinition />
@@ -105,14 +107,10 @@
                         <ColumnDefinition Width="15*" />
                     </Grid.ColumnDefinitions>
                     <Border BorderBrush="Gray" BorderThickness="3">
-                        <StackPanel Background="#757575">
-                            <Button
-                                Height="12"
-                                Background="#757575"
-                                Command="{Binding OpenCommand}"
-                                CommandParameter="UserControl3" />
+                        <StackPanel>
                             <Button
                                 Margin="5"
+                                Background="#757575"
                                 Command="{Binding OpenCommand}"
                                 CommandParameter="Serial">
                                 Serial
@@ -120,15 +118,22 @@
                             <Button
                                 Margin="5"
                                 Padding="1"
+                                Background="#757575"
                                 Command="{Binding OpenCommand}"
-                                CommandParameter="Net-port"
-                                Content="Net-port" />
+                                CommandParameter="TCP-Server"
+                                Content="TCP-Server" /> 
+                            <Button
+                                Margin="5"
+                                Padding="1"
+                                Background="#757575"
+                                Command="{Binding OpenCommand}"
+                                CommandParameter="TCP-Client"
+                                Content="TCP-Client" />
                             <ToggleButton
                                 x:Name="MenuToggleButton"
                                 AutomationProperties.Name="HamburgerToggleButton"
                                 IsChecked="False"
                                 Style="{StaticResource MaterialDesignHamburgerToggleButton}" />
-                            <Button Click="Button_Click_1">this</Button>
                             <!--<StackPanel Grid.Row="1" HorizontalAlignment="Left">
 
                                 <TextBox x:Name="txtName" Margin="5" Width="400" BorderThickness="0" Height="50" Text="Source Element"></TextBox>
@@ -144,9 +149,7 @@
                         BorderThickness="3">
                         <ContentControl x:Name="llll" Content="{Binding Body}">
                             <!--  使用内容呈现器来显示用户控件界面 Content="{Binding Body}" prism:RegionManager.RegionName="ContentRegion"  -->
-
                         </ContentControl>
-
                     </Border>
                 </Grid>
             </Grid>

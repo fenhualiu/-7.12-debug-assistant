@@ -84,16 +84,18 @@
     <Compile Include="Model\Class1.cs" />
     <Compile Include="Model\MenuBar.cs" />
     <Compile Include="Service\FormatConert.cs" />
-    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewModels\TCPClientViewModel.cs" />
+    <Compile Include="ViewModels\TCP-ServerViewModel.cs" />
     <Compile Include="ViewModels\SerialViewModel.cs" />
     <Compile Include="Views\Serial.xaml.cs">
       <DependentUpon>Serial.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Net-port.xaml.cs">
-      <DependentUpon>Net-port.xaml</DependentUpon>
+    <Compile Include="Views\TCP-Server.xaml.cs">
+      <DependentUpon>TCP-Server.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\UserControl3.xaml.cs">
-      <DependentUpon>UserControl3.xaml</DependentUpon>
+    <Compile Include="Views\TCP-Client.xaml.cs">
+      <DependentUpon>TCP-Client.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -111,11 +113,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Net-port.xaml">
+    <Page Include="Views\TCP-Server.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\UserControl3.xaml">
+    <Page Include="Views\TCP-Client.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

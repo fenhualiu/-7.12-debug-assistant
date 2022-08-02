@@ -26,7 +26,7 @@ namespace _7._12_debug_assistant
         {
             containerRegistry.RegisterForNavigation<Serial>();
             containerRegistry.RegisterForNavigation<Netport>();
-            containerRegistry.RegisterForNavigation<UserControl3>();
+            containerRegistry.RegisterForNavigation<TCPClient>();
         }
     }
 }
