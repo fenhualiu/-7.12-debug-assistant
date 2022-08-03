@@ -27,7 +27,7 @@
                 <Border >
                     <WrapPanel Orientation="Vertical">
                         <StackPanel Margin="5" Orientation="Horizontal">
-                            <TextBlock Padding="2" FontSize="20">串口</TextBlock>
+                            <TextBlock Padding="2" FontSize="15">串口</TextBlock>
                             <ComboBox
                                 x:Name="ComboBox"
                                 Width="150"
@@ -38,7 +38,7 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Margin="2" Orientation="Horizontal">
-                            <TextBlock Padding="2" FontSize="20">波特率</TextBlock>
+                            <TextBlock Padding="2" FontSize="15">波特率</TextBlock>
                             <ComboBox
                                 x:Name="BaudcomboBox"
                                 Width="150"
@@ -46,7 +46,7 @@
                                 ItemsSource="{Binding BaudData}" />
                         </StackPanel>
                         <StackPanel Margin="5" Orientation="Horizontal">
-                            <TextBlock Padding="2" FontSize="20">校验位</TextBlock>
+                            <TextBlock Padding="2" FontSize="15">校验位</TextBlock>
                             <ComboBox
                                 x:Name="CRCcomboBox"
                                 Width="150"
@@ -54,7 +54,7 @@
                                 ItemsSource="{Binding CRCData}" />
                         </StackPanel>
                         <StackPanel Margin="5" Orientation="Horizontal">
-                            <TextBlock Padding="2" FontSize="20">数据位</TextBlock>
+                            <TextBlock Padding="2" FontSize="15">数据位</TextBlock>
                             <ComboBox
                                 x:Name="DatacomboBox"
                                 Width="150"
@@ -62,7 +62,7 @@
                                 ItemsSource="{Binding Data}" />
                         </StackPanel>
                         <StackPanel Margin="5" Orientation="Horizontal">
-                            <TextBlock Padding="2" FontSize="20">停止位</TextBlock>
+                            <TextBlock Padding="2" FontSize="15">停止位</TextBlock>
                             <ComboBox
                                 x:Name="StopcomboBox"
                                 Width="150"

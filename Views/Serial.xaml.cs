@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -27,17 +28,24 @@ namespace _7._12_debug_assistant.Views
         public SerialViewModel serialViewModel;
         public  SerialPort serialPort1=new SerialPort();
         public bool iIsOpenFlag = true;
+       // Dispatcher Dispatcher;
+        private StringBuilder builder = new StringBuilder();
+        //避免在事件处理方法中反复的创建，定义到外面。
+        public Action<bool> onstringrecieved;
+        private long received_count = 0;//接收计数
         public Serial()
         {
             InitializeComponent();
             serialViewModel=new SerialViewModel();
-            this .DataContext = serialViewModel;
+            this.DataContext = serialViewModel;
             serialPort1.Close();
             string[] ports = SerialPort.GetPortNames();//获取已有的串口数目
             Array.Sort(ports);//自动排列顺序
-            ComboBox.Items.Add(ports);//添加串口
-            ComboBox.SelectedIndex = ComboBox.Items.Count > 0 ? 0 : -1;//判断串口数是否大于0
-
+            foreach(string port in ports)
+            {
+                ComboBox.Items.Add(port);//添加串口
+            }
+            ComboBox.SelectedIndex = ComboBox.Items.Count > 0 ? 0 : -1;//判断串口数是否大于0 
         }
 
 
@@ -50,6 +58,7 @@ namespace _7._12_debug_assistant.Views
         {
             SendTextBox.Text = "";
         }
+        Thread thread;
         /// <summary>
         /// 打开串口
         /// </summary>
@@ -93,7 +102,7 @@ namespace _7._12_debug_assistant.Views
                             break;
 
                         default:
-                            serialPort1.StopBits = StopBits.One;
+                            serialPort1.StopBits = StopBits.OnePointFive;
                             break;
                     }
                     serialPort1.Open();
@@ -105,10 +114,15 @@ namespace _7._12_debug_assistant.Views
                         StopcomboBox.IsEnabled = false;
                         DatacomboBox.IsEnabled = false;
                         CRCcomboBox.IsEnabled = false;
-                        Openserial.Background = Brushes.Red;
+                        Openserial.Foreground = Brushes.Red;
                         Openserial.Content = "关闭串口";
                     }
-                    serialPort1.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);//添加数据接收事件
+                     thread = new Thread(() =>
+                    {
+                        serialPort1.DataReceived += DataReceivedHandler;//添加数据接收事件
+                    });
+                    thread.Start();
+                    thread.IsBackground = true;
                 }
                 catch
                 {
@@ -126,56 +140,76 @@ namespace _7._12_debug_assistant.Views
                     StopcomboBox.IsEnabled = true;
                     DatacomboBox.IsEnabled = true;
                     CRCcomboBox.IsEnabled = true;
+                    Openserial.Foreground = Brushes.Black;
                     Openserial.Content = "打开串口";
                 }
             }
         }
-
-        Dispatcher Dispatcher;
-        private StringBuilder builder = new StringBuilder();//避免在事件处理方法中反复的创建，定义到外面。
-        private long received_count = 0;//接收计数
         /// <summary>
-        /// Data Recive
+        /// Data Recive,读取下位机的数据，显示在textBlock中.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)//读取下位机的数据，显示在textBlock中
+        public void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
+            Thread.Sleep(50);
             int len = this.serialPort1.BytesToRead;
             byte[] buffer = new byte[len];
             this.serialPort1.Read(buffer, 0, len);
+            string receivedata =string.Empty;
             builder.Remove(0, builder.Length);//清除字符串构造器的内容
-           // string strData = BitConverter.ToString(buffer, 0, len);
-            //Dispatcher.Invoke(() =>
+            //string strdata = bitconverter.tostring(buffer, 0, len);
+            //Dispatcher.invoke(() =>
             //{
-            //    this.ReciveTextBox.Text += strData;
-            //    this.ReciveTextBox.Text += " ";//字符分隔-
+            //    this.recivetextbox.text += strdata;
+            //    this.recivetextbox.text += " ";//字符分隔-
             //});
-            Dispatcher.Invoke((EventHandler)(delegate  //因为要访问ui资源，所以需要使用invoke方式同步ui。
+           // 因为要访问ui资源，所以需要使用invoke方式同步ui。
+            //onstringrecieved?.Invoke((bool)checkHexRX.IsChecked);
+            this.Dispatcher.Invoke(() =>
             {
-                if ((bool)(checkHexRX.IsChecked))//16进制显示
+                //while (true)
+                //{
+                string str= System.DateTime.Now.ToString("f");
+                string RxHex=string.Empty;
+                if ((bool)checkHexRX.IsChecked)//16进制显示
                 {
-                    //依次的拼接出16进制字符串
-                    foreach (byte b in buffer)
-                    {
-                        SendTextBox.AppendText(b.ToString("X2") + " ");
-                    }
-
+                        //依次的拼接出16进制字符串
+                        foreach (byte b in buffer)
+                        {
+                        RxHex += b.ToString("X2")+" " ;
+                        }
+                    ReciveTextBox.AppendText(str + "[Receive Hex]"+"\r\n"+ RxHex + "\r\n");
                 }
                 else
                 {
                     //直接按ASCII规则转换成字符串
-                    builder.Append(Encoding.ASCII.GetString(buffer));
+                    // builder.Append(Encoding.ASCII.GetString(buffer));
+                    receivedata = Encoding.Default.GetString(buffer);
+                    //追加的形式添加到文本框末端，并滚动到最后。
+                    this.ReciveTextBox.AppendText(str + "[Receive ASCII]" +"\r\n" + receivedata.ToString() + "\r\n");
                 }
-                //追加的形式添加到文本框末端，并滚动到最后。
-                this.ReciveTextBox.AppendText(builder.ToString());
-
-                //修改接收计数
-                //labelGetCount.Text = "Get:" + received_count.ToString();
-            }));
-
+                //}
+                Thread.Sleep(100);
+            });         
+            //修改接收计数
+            //labelGetCount.Text = "Get:" + received_count.ToString();             
         }
 
+        protected virtual void Invoke(Action action) => OnUIThread(action);
+
+        private void OnUIThread(Action action)
+        {
+            try
+            {
+                Application.Current?.Dispatcher.BeginInvoke(action);
+            }
+            catch (Exception ex)
+            {
+                
+                //        throw;
+            }
+        }
         private void HandTX_Click(object sender, RoutedEventArgs e)
         {
             if (iIsOpenFlag == true)//串口未打开
@@ -183,7 +217,6 @@ namespace _7._12_debug_assistant.Views
                 MessageBox.Show("请打开串口！", "错误");
                 return;
             }
-
             if ((bool)checkHexTx.IsChecked)//16进制发送
             {
                 string strSend = SendTextBox.Text;//获取发送框的数据
@@ -209,8 +242,6 @@ namespace _7._12_debug_assistant.Views
                 {
                     MessageBox.Show("请输入正确的16进制数", "错误");
                 }
-
-
             }
             else//字符串发送
             {
@@ -227,12 +258,11 @@ namespace _7._12_debug_assistant.Views
                 catch
                 {
                     MessageBox.Show("发送失败！", "错误");
-
                 }
 
             }
         }
-        public Timer timer = new Timer();
+        public System.Timers.Timer timer = new System.Timers.Timer();
        // public bool IsStart=false;
         private void AutoSend_Click(object sender, RoutedEventArgs e)
         {            
@@ -261,8 +291,7 @@ namespace _7._12_debug_assistant.Views
                 {
                     MessageBox.Show("关闭计时器失败！");
                 }
-            }
-           
+            }           
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
